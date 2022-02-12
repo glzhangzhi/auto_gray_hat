@@ -1,0 +1,136 @@
+g as a condition is true.
+
+s = "Spam"
+while s.len < 50
+   s = s + ", spam"
+end while
+print(s + " and spam!")
+
+[for / end for]
+A for loop can loop over any list, including ones easily created with the range function.
+
+for i in range(10, 1)
+   print i + "..."
+end for
+print("Liftoff!")
+
+[break & continue]
+The break statement jumps out of a while or for loop. The continue statement jumps to the top of the loop, skipping the rest of the current iteration.
+
+[:Numbers:]
+All numbers are stored in full-precision format.
+Numbers also represent true (1) and false (0). 
+
+[Operators]
+standard math: +, -, *, /
+mod (remainder): %
+power: ^
+logical operators: and, or, not
+comparison: ==, !=, >, >=, <, <=
+
+[Strings]
+Text is stored in strings of Unicode characters. Write strings by surrounding them with quotes.
+If you need to include a quotation mark in the string, write it twice.
+
+print("OK, ""Bob"".")
+
+[Operators]
+string concatenation: +
+replication: *
+division: /
+comparison: ==, !=, >, >=, <, <=
+get character i: [i]
+get slice from i up to j: [i:j]
+
+[Lists]
+Create a list with square brackets. Then iterate over the list with for, or pull out individual items with a 0-based index in square brackets.
+A negative index counts from the end. Get a slice (subset) of a list with two indices, separated by a colon.
+
+x = [2, 4, 6, 8]
+x[0] // 2
+x[-1] // 8
+x[1:3] // [4, 6]
+x[2]=5 // x now [2,4,5,8]
+
+[Operators]
+list concatenation: +
+replication: *
+division: /
+get/set element i: [i]
+get slice from i up to j: [i:j]
+
+[Maps]
+A map is a set of values associated with unique keys. Create a map with curly braces; get or set a single value with square brackets.
+Keys and values may be any type.
+
+m = {1:"one", 2:"two"}
+m[1] // "one"
+m[2] = "dos"
+
+[Operators]
+map concatenation: +
+get/set value with key k: [k]
+get/set value by identifier: .ident
+
+[:Functions:]
+Create a function with function(), including parameters with optional default values.
+Assign the result to a variable. Invoke by using that variable.
+
+Parentheses are needed on the call only when passing arguments. Use @ to reference a function without invoking.
+
+triple = function(n=1)
+     return n*3
+end function
+print(triple) // 3
+print(triple(5)) // 15
+f = @triple
+print(f(5)) // also 15
+
+[Classes & Objects]
+
+Shape = {"sides":0}
+Square = new Shape
+Square.sides = 4
+x = new Square
+x.sides // 4
+
+Functions invoked via dot syntax get a self variable that refers to the object they were invoked on.
+
+Shape.degrees = function()
+     return 180*(self.sides-2)
+end function
+x.degrees // 360
+
+[Base Functions]
+Numeric
+abs(x)		acos(x)		asin(x)
+atan(x)		cos(r)		pi
+round(x,d)		rnd		rnd(seed)
+sign(x)		sin(r)		sqrt(x)
+str(x)		tan(r)		char(i)
+floor(i)
+
+String
+.hasIndex(i)	.indexOf(s)
+.len		.val
+.remove(s)		.lower
+.code		.upper
+.lastIndexOf(i)	.trim
+.replace(s, s)	.split(s)
+
+List/Map
+.pull	.indexOf(x)
+.indexes	.values
+.len	.sum
+.push(x)	.pop
+.shuffle	.remove(i)
+.hasIndex(i)
+range(from, to, step)
+slice(l, from, to)
+
+List-specific
+.reverse
+.join(s)
+
+Other
+print(s)

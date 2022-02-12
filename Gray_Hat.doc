@@ -1,0 +1,137 @@
+active_user
+bitwise
+clean_screen
+command_info
+current_date
+current_path
+exit [opt string message] 结束脚本的运行，并可选的打印给出的信息
+format_columns
+get_router
+get_shell [opt string user] [opt string password] 以当前用户打开终端或者以提供的账户信息打开
+get_switch
+home_dir
+import_code
+include_lib
+is_lan_ip
+is_valid_ip
+launch_path
+mail_login
+nslookup
+parent_path
+print
+program_path
+typeof
+user_bank_number
+user_input [opt string promptMsg] [opt passwordMode] [opt bool anyKey] 输出提示并接受用户输入，可开启输密码模式，也可开启单键触发模式
+user_mail_address
+wait
+whois
+
+Computer.change_password
+Computer.close_program
+Computer.connect_active_net_card
+Computer.connect_ethenet
+Computer.connect_gateway
+Computer.connect_wifi [string net_device] [string bssid] [string essid] [string password] 使用本电脑连接wifi
+Computer.create_folder
+Computer.create_group
+Computer.create_user
+Computer.delete_group
+Computer.delete_user
+Computer.File [string path_file] 打开给定路径的文件或者文件夹
+Computer.get_ports 返回本机所有激活的端口
+Computer.groups [string username] 查看对应用户所在的所有组
+Computer.is_network_active
+Computer.local_ip
+Computer.network_device
+Computer.public_ip
+Computer.show_procs 输出本机正在运行的所有程序信息
+Computer.touch
+Computer.wifi_networks [string device] 输出指定wifi设备能够搜索到的所有wifi信号信息
+
+// router = get_router(ip_address)
+Router.bssid_name  返回本wifi的bssid名
+Router.device_ports [string local_ip] 返回可以从本wifi可连接到指定内网ip的所有端口对象
+Router.devices_lan_ip 返回与本wifi连接的其他内网ip
+Router.essid_name 返回本wifi的essid名
+Router.firewall_rules 返回防火墙规则
+Router.kernel_version 返回kernel_router库的版本
+Router.local_ip 返回本wifi的内网ip
+Router.ping_port [int port] 返回本wifi上给定的端口
+Router.port_info [portObj] 返回给定端口对象的信息
+Router.public_ip 返回本wifi的公网ip
+Router.used_ports 返回本wifi所有在使用的端口对象的集合
+
+File.allow_import
+File.chmod
+File.copy
+File.delete
+File.get_content 返回文件内容的字符串
+File.get_files
+File.get_folders
+File.group
+File.has_permission [string type_perm] 判断正在运行该脚本的用户是否具有对此文件给出的权限
+File.is_binary 判断文件是否为二进制文件
+File.move
+File.name
+File.owner
+File.parent
+File.path
+File.permissions
+File.rename
+File.set_content
+File.set_group
+File.set_owner
+File.size
+
+Port.get_lan_ip
+Port.is_closed
+Port.port_number
+
+Shell.build
+Shell.connect_service
+Shell.host_computer 返回当前终端所在的电脑对象Computer
+Shell.launch [string path_program] [string parameters] 使用终端运行程序
+Shell.ping
+Shell.put
+Shell.scp
+Shell.start_terminal
+
+// cryptools = include_lib("/lib/crypto.so")
+Crypto.aircrack [string filePath] 从数据文件中返回破解的WIFI密码
+Crypto.aireplay [string bssid] [string essid] [opt int maxAck] 对指定WIFI监听并获取数据包，可选的设定最大Ack数
+Crypto.airmon ["start"|"stop"] [string device] 在指定设备上启用或停用monitor模式
+Crypto.decipher [string encrypted_pass] 破解给定的密码
+Crypto.smtp_user_list [string ip_address] [int port] 获取该smtp服务上所有用户的用户名，如果其在该服务器上注册了有邮箱，也返回其邮箱
+
+AptClient.add_repo
+AptClient.check_upgrade
+AptClient.del_repo
+AptClient.install
+AptClient.search
+AptClient.show
+AptClient.update
+
+// metaxploit = include_lib("/lib/metaxploit.so")
+Metaxploit.load [string lib_path] 载入给定路径的库，并返回Metalib对象，主要用于对本地库的攻击
+Metaxploit.net_use [string ip_address] [opt port] 以给定的ip和端口连接指定网络，只能用于远程服务，返回NetSession对象
+Metaxploit.rshell_client
+Metaxploit.rshell_server
+Metaxploit.scan [metalib] 扫描给定库内存在漏洞的内存
+Metaxploit.scan_address [metalib] [mem_address] 扫描给定库的给定内存区域的漏洞
+Metaxploit.sniffer [opt bool SaveEncSource] 监听给定的设别并显示流量信息，可选的可保存这些信息
+
+// metalib = netsession.dump_lib or metalib = metaxploit.load("path_lib")
+Metalib.lib_name
+Metalib.overflow [string mem_address] [string unsec_value] [opt extra_args] 通过内存溢出暴露漏洞，返回的类型多种多样，甚至需要传入额外参数
+Metalib.version
+
+// netsession = Metaxploit.net_use(ip, port)
+NetSession.dump_lib 返回远程连接设备对应的库对象Metalib，主要用于对远程端口库的攻击
+
+// metamail = mail_login(username, password)
+MetaMail.delete
+MetaMail.fetch
+MetaMail.read
+MetaMail.send
+

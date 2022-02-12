@@ -1,0 +1,38 @@
+216.177.35.108
+
+ssh
+1.0.0 22
+
+
+
+smtp
+1.0.0 25
+
+0x6EB2D460
+Unsafe check: string copy in <b>defaultcomprev_</b>. Buffer overflow.       file root
+
+0x53C4254
+Unsafe check: string copy in <b>valuesr</b>. Buffer overflow.               file user
+
+0x2B3449F3
+Unsafe check: string copy in <b>ostroyimmentsrem</b>. Buffer overflow.      change password
+
+http
+1.0.0 80
+
+0x60374E82
+Unsafe check: string copy in <b>inenumsionx</b>. Buffer overflow.           change password
+
+0x30DD0C9C
+Unsafe check: string copy in <b>tlinenumber</b>. Buffer overflow.           file guest
+
+sql
+1.0.0 3306
+
+0x28E62565
+Unsafe check: loop in array <b>buttoninvoken</b>. Buffer overflow.          computer guest
+
+0x5D11AD29
+Unsafe check: loop in array <b>dedbyb</b>. Buffer overflow.                 [shell guest]
+Unsafe check: string copy in <b>hisop</b>. Buffer overflow.                 change password
+Unsafe check: loop in array <b>functioncodec</b>. Buffer overflow.          computer guest

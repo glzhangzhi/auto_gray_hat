@@ -1,0 +1,423 @@
+############################################################################
+// 保存在/home/username/Scripts里的所有脚本文件
+comp = get_shell.host_computer
+sdir = comp.File("/home/trog/Scripts")
+scripts = comp.File("/home/trog/scripts.txt")
+if not scripts then 
+	comp.touch("/home/trog", "scripts.txt")
+	scripts = comp.File("/home/trog/scripts.txt")
+end if
+if not scripts then exit("Can not open /home/trog/scripts.txt!")
+
+s = ""
+for f in sdir.get_files
+	if not f.is_binary and not f.is_folder then
+		s = s + "@"*5 + f.path + char(10) + f.get_content + char(10) + "@"*10 + char(10)
+	end if
+end for
+
+scripts.set_content(s)
+############################################################################
+// 解压之前保存的脚本文件合集
+comp = get_shell.host_computer
+scripts = comp.File("/home/trog/scripts.txt")
+if not scripts then exit("Can not open /home/trog/scripts.txt!")
+
+s = scripts.get_content.split(char(10))
+
+while s.len > 0
+	line = s.pull
+	//print(">"+line)
+	while line.indexOf("@"*5) != 0
+		line = s.pull
+		if s.len == 0 then exit("Done.")
+		//print(">>"+line)
+	end while
+	//print(line)
+	fpth = line[5:]
+	//print("Write to file: " + fpth + "...")
+	fn = fpth[fpth.lastIndexOf("/")+1:]
+	pth = fpth[:fpth.lastIndexOf("/")]
+	cont = []
+	line = s.pull
+	while s.len > 0 and line.indexOf("@"*10) != 0
+		cont.push(line)
+		line = s.pull
+	end while
+
+	sdir = comp.File(pth)
+	if not sdir then
+		comp.create_folder(pth[:pth.lastIndexOf("/")], pth[pth.lastIndexOf("/")+1:])
+		sdir = comp.File(pth)
+		if not sdir then exit("Can't create " + pth + " folder!")
+	end if
+	r = comp.touch(pth, fn)
+	if r != 1 then 
+		print("ERROR: Can't create file " + fpth + "! " + r)
+	else
+		f = comp.File(fpth)
+		if f then
+			f.set_content(cont.join(char(10)))
+			print("Created file " + fpth + ".")
+		else
+			print("ERROR: Can't open file " + fpth + "!")
+		end if
+	end if
+end while
+############################################################################
+// 编译所有在Scripts下的脚本文件
+buildSrc = function(pathSource, programPath, fn)
+	print("Building " + pathSource + "...")
+	comp = get_shell.host_computer
+	fileSource = comp.File(pathSource)
+	folderDest = comp.File(programPath)
+	
+	if fileSource == null then exit("build: can't find "+ pathSource)
+	if folderDest == null then exit("build: can't find " + programPath)
+	
+	//f = comp.File(programPath + "/" + fn)
+	//if f then f.delete
+	
+	output = get_shell.build(fileSource.path, folderDest.path)
+	if output.len != 0 then
+		print(output);
+	end if
+end function
+
+
+comp = get_shell.host_computer
+sdir = comp.File("/home/trog/Scripts")
+if not sdir then exit("Can not open /home/trog/Scripts.txt!")
+
+for f in sdir.get_files
+	if not f.is_binary and not f.is_folder then
+		buildSrc(f.path, "/bin", f.name)
+	end if
+end for
+############################################################################
+// 执行在目标设备上的漏洞攻击
+metaxploit = include_lib("/lib/metaxploit.so")
+decipherFile = get_shell.host_computer.File("/bin/decipher")
+address = params[0]
+port = params[1].to_int
+memory = params[2]
+exploit = params[3]
+if params.len == 5 then		// check if parameter 5 was provided
+	newPass = params[4]
+else
+	newPass = null
+end if
+
+net_session = metaxploit.net_use(address, port)
+metaLib = net_session.dump_lib
+if newPass == null then		// if parameter 5 is not empty
+	result = metaLib.overflow(memory, exploit)		// performs a buffer overflow attack 
+else
+	result = metaLib.overflow(memory, exploit, newPass)		// performs a buffer overflow attack to change password
+	if result then	print("<b>New password: "+newPass+"</b>")		// prints new password
+end if
+
+if result != null then
+	type = typeof(result)		// var type is the type of var result
+	if type != "shell" and type != "file" then exit("<color=#ff0000>Error: This type is not supported.</color>")		// if type is not equal to 'shell' and 'file' then exit
+	if type == "shell" then result.start_terminal		// if type is shell open terminal
+	if type == "computer" then		// if type is computer
+		passFile = result.File("/etc/passwd")		// reads content of the file and sets it in passFile var 
+		if not passFile then exit("Password file is missing.")		// if passFile is empty exit
+		if passFile.has_permission("r") then		// check permission of passFile
+			if passFile == null then exit("Password file is empty.")		// checks if the passFile is empty
+			fileLocation = "/home/"+active_user		// sets var fileLocation to '/home/user_directory'
+			createFile = get_shell.host_computer.File(fileLocation+"/receivedPaswd.txt")		// checks if receivedPaswd.txt file exist
+			if createFile then createFile.delete		// if old file exist delete it
+			get_shell.host_computer.touch(fileLocation, "receivedPaswd.txt")		// creates empty file named 'receivedPaswd.txt' in the user directory
+			get_shell.host_computer.File(fileLocation+"/receivedPaswd.txt").set_content(result.File("/etc/passwd").content)		// copies content of '/etc/passwd' to 'receivedPaswd.txt'
+			createFile = get_shell.host_computer.File(fileLocation+"/receivedPaswd.txt")
+		else
+			exit("Unable to access password file")		// if no permission to read file '/etc/passwd'
+		end if
+		if createFile == null then		// if created file is empty remove file and exit
+			createFile.delete
+			exit("Downloaded password file is empty.")
+		end if
+		while true		// loop while - this loop will never end, until user selects 0, 1 or 2
+			print("Option: ")
+			print("1. Decipher")
+			print("2. Remove file with passwords")
+			print("0. Exit")
+			opt = user_input("Option: ")		// this is user option - it waits for user input and stores this value in opt var
+			if opt == "0" then exit("-- Done --")		// if user entered '0' exit
+			if opt == "1" then		// if user entered '1'
+				get_shell.launch("/bin/decipher", fileLocation+"/receivedPaswd.txt")		// execute program '/bin/decipher' with parameter
+			end if
+			if opt == "2" then		// if user entered '2'
+				if createFile then createFile.delete		// checks if createFile exist and delete it
+				exit("File: 'receivedPaswd.txt' was removed.")
+			end if
+		end while
+	end if
+else
+	exit("-- Probe Failed --")
+end if
+############################################################################
+// airmon plus
+cryptools = include_lib("/lib/crypto.so") // import library containing all the "air" tools.
+get_shell.launch("/bin/airmon") // list all monitor capable device states
+device = user_input("[+]Choose Interface: ") // ask for user to pick device
+if not device[0:4] == "wlan" then exit end if // check they at least chose a wireless Interface using slice
+print("\n[-]New State...\n")
+cryptools.airmon("start", device) // start the device in monitor mode
+get_shell.launch("/bin/airmon") // show new state
+############################################################################
+// iwlist plus
+print("[-]Choose BSSID & ESSID (more PWR% is better)\n")
+get_shell.launch("/bin/iwlist", device) // list detected wireless networks
+b = user_input("\n[+]BSSID: ") // ask for BSSID
+e = user_input("\n[+]ESSID: ") // ask for corrisponding ESSID
+acks = user_input("\n[+]ACKs (>7000): ").to_int // ask for ACK count to aim for, and convert to int
+print("\n")
+
+if acks < 7000 then acks = 7000 end if // if user enters less than 7000 (the minimum for success) then set it to 7000
+############################################################################
+// aireplay plus
+cryptools.aireplay(b, e, acks) // run aireplay with the user input from above
+print("\n[-]Got Required amount of ACKs...")
+print("[-]Waiting for file.cap to be written...\n")
+wait(5) // without this aircrack runs immediately and file.cap isnt written yet
+print("[-]Cracking...\n")
+############################################################################
+// aircrack plus
+capfile = current_path + "/file.cap" // set file.cap path
+get_shell.launch("/bin/aircrack", capfile) // aircrack the file and display result
+print("\n[-]Stopping device monitoring...\n")
+############################################################################
+// airmon following
+cryptools.airmon("stop", device) // turn off monitor mode
+get_shell.launch("/bin/airmon") // show new state
+############################################################################
+// 删除破解wifi留下的文件
+capfile = get_shell.host_computer.File(current_path + "/file.cap") // prep capfile for potential deletion
+confirm = user_input("Destroy file.cap (y/N): ")
+
+if confirm == "Y" or confirm == "y" or confirm == "Yes" or confirm == "yes" then capfile.delete end if // delete capfile if user input is yes
+
+print("\n[-]Goodbye...\n")
+############################################################################
+// 自动多目标破解
+cryptools = include_lib("/lib/crypto.so")
+if not cryptools then
+	include_lib(current_path + "/crypto.so")
+else if not cryptools then
+	exit("Error: Missing crypto library")
+end if
+
+GetPassword = function(userPass)
+	if userPass.len != 2 then exit("decipher: " + file.path + " wrong syntax")
+	password = cryptools.decipher(userPass[1])
+	return password
+end function
+
+if params.len != 1 or params[0] == "-h" or params[0] == "--help" then exit(command_info("decipher_usage"))
+
+origFile = params[0]
+file = get_shell.host_computer.File(origFile)
+if not file then exit("decipher: can't find " + origFile)
+if not file.has_permission("r") then exit("can't read file. Permission denied")
+if file.get_content.len == 0 then exit("decipher: no users found")
+	
+lines = file.get_content.split("\n")
+password = null
+if lines.len == 1 then
+	
+	userPass = lines[0].split(":")
+	password = GetPassword(userPass)
+else
+	print("Multiple users found.")
+	numLine = 1
+	for line in lines
+		if line.len > 0 then
+			print(numLine + ": " + line)
+			numLine = numLine + 1
+		end if
+	end for
+	print("\n")
+	allDone = 0
+	while( allDone < numLine )
+		userPass = lines[allDone].split(":")
+		allDone = allDone + 1
+		print("Selected user: " + userPass[0] + "\nDeciphering...")
+		password = GetPassword(userPass)
+		if not password then exit("Can't find password :(")
+		print("password found! => " + password + "\n")
+	end while
+end if
+############################################################################
+// 自用版本的自动WIFI破解
+shell = get_shell()
+computer = shell.host_computer
+networks = computer.wifi_networks("wlan0")
+best_b = ""
+best_p = 0
+best_e = ""
+for network in networks
+	p = network.split(" ")[1][:-1].val
+	if p >= best_p then
+		best_p = p
+		best_b = network.split(" ")[0]
+		best_e = network.split(" ")[2]
+	end if
+end for
+num_ack = ceil(300000/best_p)
+cryptools = include_lib("/lib/crypto.so")
+cryptools.airmon("start", "wlan0")
+cryptools.aireplay(best_b, best_e, num_ack)
+cwd = current_path
+cryptools.airmon("stop", "wlan0")
+password = cryptools.aircrack(cwd+"/file.cap")
+computer.connect_wifi("wlan0", best_b, best_e, password)
+cap_file = computer.File(cwd+"/file.cap")
+cap_file.delete
+gift = computer.File("/home/glzhangzhi/Desktop/BestGift.txt")
+if not gift then 
+	computer.touch("/home/glzhangzhi/Desktop", "BestGift.txt")
+	gift = computer.File("/home/glzhangzhi/Desktop/BestGift.txt")
+end if
+s = best_b + " " + best_e + " " + password
+gift.set_content(s)
+############################################################################
+// 目标地址破解性分析  TODO：要整合进端口号和破解后取得的类型和权限
+metaxploit = include_lib("/lib/metaxploit.so")
+computer = get_shell.host_computer
+log = computer.File("/home/glzhangzhi/log.txt")
+if not log then
+	computer.touch("/home/glzhangzhi", "log.txt")
+	log = computer.File("/home/glzhangzhi/log.txt")
+end if
+address = params[0]
+router = get_router(address)
+ports = router.used_ports
+log_string = ""
+log_string = log_string + "\n" + address
+info = ""
+for port in ports
+    service_info = router.port_info(port)
+    lan_ips = port.get_lan_ip
+    port_status = "open"
+
+    if(port.is_closed and not isLanIp) then
+       port_status = "closed"
+    end if
+    info = info + "\n" + port.port_number + " " + port_status + " " + service_info + " " + lan_ips
+	if port_status == "open" then    
+		net_session = metaxploit.net_use(address, port.port_number)
+    	metalib = net_session.dump_lib
+    	print(metalib.lib_name + " " + metalib.version)
+		wait(0.1)
+		log_string = log_string + "\n" + metalib.lib_name + " " + metalib.version
+		mems = metaxploit.scan(metalib) // so slow
+		for mem in mems
+			print(mem)
+			log_string = log_string + "\n" + mem
+			s = metaxploit.scan_address(metalib, mem)
+			log_string = log_string + "\n" + s
+			print(s)
+		end for
+	end if
+end for
+print(format_columns(info) + "\n")
+log.set_content(log_string)
+############################################################################
+// 自用sudo
+if not params or params[0] == "-h" or params[0] == "--help" then exit(command_info("sudo_usage"))
+if params[0] == "-u" and params.len != 2 then exit(command_info("sudo_usage"))
+if params[0] == "su" then
+	shell = get_shell("root", "1")
+	shell.start_terminal
+else
+inputPass = user_input("Password: ", true)
+
+if params[0] == "-u" then
+	shell = get_shell(params[1], inputPass)
+	if not shell then exit("sudo: incorrect username or password")
+else 
+	shell = get_shell("root", inputPass)
+	if not shell then exit("sudo: incorrect password")
+end if
+
+if params[0] == "-s" or params[0] == "-u" then 
+	shell.start_terminal
+else
+	computer = shell.host_computer
+	args = params[1:].join(" ")
+	if not params[0].indexOf("/") then
+		globalPath = [current_path, "/bin", "/usr/bin"]
+		for path in globalPath
+			program = computer.File(path + "/" + params[0])
+			if program != null then exit(shell.launch(program.path, args))
+		end for
+	else
+		program = computer.File(params[0])
+		if not program then exit(params[0] + " not found.")
+			shell.launch(program.path, args)
+		end if
+	end if
+end if
+############################################################################
+// 
+
+
+############################################################################
+// 
+
+
+############################################################################
+// 
+
+
+############################################################################
+// 
+
+
+############################################################################
+// 
+
+
+############################################################################
+// 
+
+
+############################################################################
+// 
+
+
+
+############################################################################
+// 总体设计思路是，输入一个公网IP，能够自动对该router下每个开放的端口进行分析
+// 并对得到的所有内存区域进行漏洞扫描，提取出造成内存溢出的字段
+// 并且还能提取出针对这些字段进行攻击时，需要满足哪些需求
+
+
+
+############################################################################
+// 针对上一个脚本的功能，这里主要能够读取上面形成的内容，输出可用的字段，形成txt文件
+// 以便游戏使用
+
+
+
+############################################################################
+// 
+
+
+
+############################################################################
+// 
+
+
+
+############################################################################
+// 
+
+
+
+
+
+
